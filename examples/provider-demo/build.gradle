@@ -1,0 +1,51 @@
+plugins {
+    id 'com.android.application'
+}
+
+def workspaceRoot = rootProject.projectDir.parentFile
+def signingPropsFile = new File(workspaceRoot, "Keystore/sdk_demo_provider/signing.properties")
+def signingProps = new Properties()
+if (signingPropsFile.exists()) {
+    signingPropsFile.withInputStream { signingProps.load(it) }
+}
+def hasDemoSigning = signingProps['storeFile'] && signingProps['storePassword'] && signingProps['keyAlias'] && signingProps['keyPassword']
+
+android {
+    namespace 'ai.rorsch.pandagenie.sdkdemo.provider'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'ai.rorsch.pandagenie.sdkdemo.provider'
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName '1.0.0'
+    }
+
+    signingConfigs {
+        if (hasDemoSigning) {
+            demoRelease {
+                storeFile file(signingProps['storeFile'])
+                storePassword signingProps['storePassword']
+                keyAlias signingProps['keyAlias']
+                keyPassword signingProps['keyPassword']
+                v1SigningEnabled true
+                v2SigningEnabled true
+                enableV3Signing = true
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            if (hasDemoSigning) {
+                signingConfig signingConfigs.demoRelease
+            }
+            minifyEnabled false
+        }
+    }
+}
+
+dependencies {
+    implementation project(':pandagenie-sdk')
+}

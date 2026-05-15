@@ -1,0 +1,1 @@
+-keep class ai.rorsch.pandagenie.sdk.core.** { *; }

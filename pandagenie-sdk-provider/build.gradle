@@ -1,0 +1,37 @@
+plugins {
+    id 'com.android.library'
+    id 'maven-publish'
+}
+
+android {
+    namespace 'ai.rorsch.pandagenie.sdk.provider'
+    compileSdk 35
+
+    defaultConfig {
+        minSdk 24
+        consumerProguardFiles 'consumer-rules.pro'
+    }
+
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+        }
+    }
+}
+
+dependencies {
+    api project(':pandagenie-sdk-core')
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = 'ai.rorsch.pandagenie'
+                artifactId = 'pandagenie-sdk-provider'
+                version = '0.1.0-preview'
+            }
+        }
+    }
+}

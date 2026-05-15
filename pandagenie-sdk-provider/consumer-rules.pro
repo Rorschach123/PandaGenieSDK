@@ -1,0 +1,2 @@
+-keep class ai.rorsch.pandagenie.sdk.provider.** { *; }
+-keep class ai.rorsch.pandagenie.sdk.core.** { *; }

@@ -1,0 +1,23 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "PandaGenieSDK"
+include ':pandagenie-sdk-core'
+include ':pandagenie-sdk-provider'
+include ':pandagenie-sdk-agent'
+include ':pandagenie-sdk'
+include ':pandagenie-sdk-demo-provider'
+project(':pandagenie-sdk-demo-provider').projectDir = file('examples/provider-demo')

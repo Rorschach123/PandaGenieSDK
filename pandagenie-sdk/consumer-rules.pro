@@ -1,0 +1,4 @@
+-keep class ai.rorsch.pandagenie.sdk.** { *; }
+-keep class ai.rorsch.pandagenie.sdk.core.** { *; }
+-keep class ai.rorsch.pandagenie.sdk.agent.** { *; }
+-keep class ai.rorsch.pandagenie.sdk.provider.** { *; }
