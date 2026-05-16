@@ -1,81 +1,58 @@
 # PandaGenieSDK
 
-PandaGenieSDK is the Android interoperability SDK for the PandaGenie ecosystem. It lets Android apps expose local capabilities in a discoverable, permission-aware, and auditable way, so PandaGenie or another approved AI assistant can call those capabilities from a natural-language task.
+**面向 Android 的 PandaGenie 应用互操作 SDK**
 
-**Languages:** English | [Simplified Chinese](README_CN.md)
+[官网](https://cf.pandagenie.ai) | [SDK 注册](https://cf.pandagenie.ai/sdk) | [SDK Provider 模板](https://github.com/Rorschach123/PandaGenieSDK-Provider-Template) | [PandaGenieSource](https://github.com/Rorschach123/PandaGenieSource) | [Discord](https://discord.gg/Cfc7pjrjt2) | [English](README_EN.md)
 
-The SDK is distributed as an Android AAR. It connects two kinds of apps:
+---
 
-- **AI Assistant / Agent**: an app with planning ability, such as PandaGenie, that discovers other apps and invokes their exported capabilities.
-- **Capability Provider**: a normal Android app that exposes safe operations, data views, or UI entry points for approved assistants to call.
+## SDK 是什么
 
-## Ecosystem
+PandaGenieSDK 是一个 Android AAR，用于让不同 App 之间以可发现、可审核、可权限控制的方式互相调用能力。
 
-| Project | Purpose |
+它服务两类应用：
+
+- **AI 助手应用**：具备任务规划能力的应用，例如 PandaGenie。它可以发现已审核的能力应用，并在用户授权后调用这些能力。
+- **能力应用**：普通 Android 应用。它通过 SDK 暴露可调用能力，例如打开指定页面、查询本地数据、执行 Service、提供 Provider 数据或接收 Broadcast。
+
+SDK 的目标不是绕过 Android 权限，而是把“应用能做什么、谁能调用、调用是否可信、结果如何审计”做成统一协议。
+
+## 生态关系
+
+| 项目 | 作用 |
 |---|---|
-| [PandaGenie](https://cf.pandagenie.ai) | Official website, APK download, developer entry points, SDK registration and module submission. |
-| [PandaGenieSource](https://github.com/Rorschach123/PandaGenieSource) | Android app source, official modules, module packaging, and module developer docs. |
-| [PandaGenieSDK](https://github.com/Rorschach123/PandaGenieSDK) | Android AAR for app-to-app capability discovery, trust verification, and invocation. |
-| [PandaGenie Module Template](https://github.com/Rorschach123/PandaGenie-Module-Template) | Starter project for building hot-loadable PandaGenie modules. |
-| [SDK registration](https://cf.pandagenie.ai/sdk) | Submit an app package name, release signing certificate, role, and capability description for review. |
-| [Task / Module market](https://cf.pandagenie.ai/marketplace) | Public tasks and modules that PandaGenie can use. |
-| [Discord](https://discord.gg/Cfc7pjrjt2) | Developer support, SDK review acceleration, and module publishing help. |
+| [PandaGenie 官网](https://cf.pandagenie.ai) | APK 下载、任务市场、模块市场、SDK 注册、模块提交和开发者入口。 |
+| [PandaGenieSource](https://github.com/Rorschach123/PandaGenieSource) | PandaGenie App 源码、官方模块、模块打包和模块目录。 |
+| [PandaGenieSDK](https://github.com/Rorschach123/PandaGenieSDK) | 当前仓库：Android AAR、Agent/Provider SDK、Demo 和文档。 |
+| [PandaGenieSDK Provider Template](https://github.com/Rorschach123/PandaGenieSDK-Provider-Template) | 独立能力应用模板，适合第三方 App 快速接入。 |
+| [PandaGenie Module Template](https://github.com/Rorschach123/PandaGenie-Module-Template) | PandaGenie 内部热加载模块模板。 |
 
-Use the module template when you want to extend PandaGenie itself. Use PandaGenieSDK when you want an independent Android app to become callable by PandaGenie, or when you want to build another AI assistant that calls approved apps.
+简单区分：
 
-## Repository Layout
+- 想扩展 PandaGenie 内部能力：开发 **模块**。
+- 想让自己的独立 App 被 PandaGenie 调用：接入 **PandaGenieSDK Provider**。
+- 想做一个能调用其他 App 的 AI 助手：接入 **PandaGenieSDK Agent**。
+
+## 仓库结构
 
 ```text
 PandaGenieSDK/
-  pandagenie-sdk/                Unified AAR facade exported to app developers
-  pandagenie-sdk-core/           Shared roles, trust cache, signature and registry helpers
-  pandagenie-sdk-agent/          Discovery and invocation client for AI assistant apps
-  pandagenie-sdk-provider/       Base service and manifest builder for capability apps
-  examples/provider-demo/        Runnable demo app with Service, Activity, Provider and Broadcast examples
-  docs/                          Architecture, integration, registration and template guides
-  templates/provider-app/        Lightweight guide for creating a standalone provider template repo
+  pandagenie-sdk/             统一 AAR 门面，开发者主要依赖这个模块
+  pandagenie-sdk-core/        角色、签名、信任缓存、注册表等公共逻辑
+  pandagenie-sdk-agent/       AI 助手侧发现和调用能力应用
+  pandagenie-sdk-provider/    能力应用侧服务基类与 manifest 构建器
+  examples/provider-demo/     可运行 Demo，覆盖 Activity/Service/Provider/Broadcast
+  docs/                       架构、接入、注册审核和模板说明
+  templates/provider-app/     独立 Provider 模板仓库说明
 ```
 
-The public dependency should be the unified AAR:
-
-```gradle
-implementation("ai.rorsch.pandagenie:pandagenie-sdk:0.1.0-preview")
-```
-
-The internal modules remain split only to keep implementation responsibilities clear.
-
-## Capability Model
-
-An app initializes the SDK with one or both roles:
-
-```java
-PandaGenieSdk.initialize(
-    context,
-    PandaGenieSdk.Options.builder()
-        .roles(PandaGenieSdk.Role.PROVIDER)
-        .build()
-);
-```
-
-| Role | Meaning |
-|---|---|
-| `PROVIDER` | Exposes capabilities that an approved AI assistant can discover and invoke. |
-| `AGENT` | Discovers approved providers, reads their capability manifests, and invokes them. |
-| `AGENT + PROVIDER` | Useful for apps that both expose their own abilities and call other apps. Each role is reviewed separately. |
-
-The server validates apps by `packageName + release SHA-256 signature + role`. A package can be approved as a provider but not as an agent, or vice versa.
-
-## Provider Quick Start
-
-1. Add the SDK dependency.
+## 快速接入：能力应用
 
 ```gradle
 dependencies {
     implementation("ai.rorsch.pandagenie:pandagenie-sdk:0.1.0-preview")
 }
 ```
-
-2. Initialize the SDK in your `Application`.
 
 ```java
 public final class MyApp extends Application {
@@ -87,189 +64,67 @@ public final class MyApp extends Application {
 }
 ```
 
-3. Register an exported capability service.
+能力应用需要：
 
-```xml
-<service
-    android:name=".MyCapabilityService"
-    android:exported="true">
-    <intent-filter>
-        <action android:name="ai.rorsch.pandagenie.sdk.action.CAPABILITY_SERVICE" />
-    </intent-filter>
-</service>
-```
+1. 声明可调用能力清单。
+2. 暴露 SDK 能发现的 Service/Provider/Activity/Broadcast。
+3. 校验调用方是否是已审核 AI 助手。
+4. 返回结构化 JSON 结果。
+5. 到 [SDK 注册页](https://cf.pandagenie.ai/sdk) 提交包名、Release SHA-256 签名、应用说明和能力列表。
 
-4. Declare capabilities and handle invocations.
-
-```java
-public final class MyCapabilityService extends PandaGenieCapabilityService {
-    @Override
-    protected String getManifestJson() {
-        return new CapabilityManifestBuilder(this)
-            .capability(
-                "notes.create",
-                "Create note",
-                "Create a note from title and body",
-                "service",
-                "normal",
-                new JSONArray().put("storage.write"),
-                new JSONObject()
-                    .put("title", "string")
-                    .put("body", "string")
-            )
-            .build()
-            .toString();
-    }
-
-    @Override
-    protected CapabilityResult onInvoke(
-        String capabilityId,
-        JSONObject params,
-        InvokeContext context
-    ) throws Exception {
-        if ("notes.create".equals(capabilityId)) {
-            String title = params.optString("title");
-            String body = params.optString("body");
-            // Save the note in your app.
-            return CapabilityResult.ok(new JSONObject().put("created", true));
-        }
-        return CapabilityResult.fail("unknown capability: " + capabilityId);
-    }
-}
-```
-
-## Agent Quick Start
-
-Agent apps discover provider services, fetch manifests, pass the capability knowledge to their LLM planner, then call the selected capability.
+## 快速接入：AI 助手
 
 ```java
 PandaGenieSdk.initialize(context, PandaGenieSdk.Role.AGENT);
 
 PandaGenieAgentClient client = new PandaGenieAgentClient(context);
 List<DiscoveredProvider> providers = client.discoverProviders();
-
-for (DiscoveredProvider provider : providers) {
-    client.fetchManifest(provider, new ManifestCallback() {
-        @Override
-        public void onManifest(DiscoveredProvider provider, String manifestJson) {
-            // Add manifestJson to the assistant's tool/capability knowledge base.
-        }
-
-        @Override
-        public void onError(DiscoveredProvider provider, String error) {
-            // Ignore unavailable providers or show diagnostics in developer mode.
-        }
-    });
-}
 ```
 
-Invoke after the assistant has produced a capability call:
+AI 助手需要：
 
-```java
-client.invoke(
-    provider,
-    "notes.create",
-    new JSONObject().put("title", "Todo").put("body", "Buy milk"),
-    null,
-    new InvocationCallback() {
-        @Override
-        public void onResult(DiscoveredProvider provider, String capabilityId, String resultJson) {
-            // Render resultJson to the user.
-        }
+1. 通过 SDK 发现已安装能力应用。
+2. 读取能力应用 manifest。
+3. 将能力清单交给自己的 LLM 规划器。
+4. 根据模型返回的调用链执行 SDK 调用。
+5. 校验能力应用是否在服务端下发的可信名单中。
 
-        @Override
-        public void onError(DiscoveredProvider provider, String capabilityId, String error) {
-            // Explain the failure in user-friendly language.
-        }
-    }
-);
-```
+## 信任、审核与黑名单
 
-## Trust, Review and Blacklist
-
-SDK calls are not purely local trust-by-intent calls. PandaGenie keeps a server-side registry and publishes a compact trust cache:
-
-```text
-GET https://cf.pandagenie.ai/sdk/trust-cache?role=agent,provider
-```
-
-The cache includes approved and non-blacklisted identities. The identity is derived from:
+服务端按下面的身份生成可信记录：
 
 ```text
 sha256(packageName|normalizedReleaseSignatureSha256|role)
 ```
 
-Flow:
+一个应用可以同时申请 Agent 和 Provider，但两个角色会独立审核。被加入黑名单的 `包名 + 签名 + 角色` 不会出现在可信缓存中，SDK 也会拒绝其调用或隐藏其能力。
 
-1. A developer submits an app on [SDK registration](https://cf.pandagenie.ai/sdk).
-2. Admin reviews package name, release signing certificate, app role, app description and capability list.
-3. Approved apps are published in the trust cache.
-4. Blacklisted package/signature/role identities are removed from the callable set.
-5. SDK refreshes the cache periodically, so server-side decisions propagate without app updates.
-
-Provider services reject untrusted agents by default. Agent clients hide untrusted providers by default.
-
-## Demo App and Template
-
-`examples/provider-demo` is intentionally outside the main PandaGenie app project. It is both a runnable demo and the recommended base for a GitHub template repository. The Gradle module name remains `:pandagenie-sdk-demo-provider`.
-
-It demonstrates:
-
-- Service invocation with JSON parameters and JSON result.
-- Opening an Activity and displaying passed text.
-- Reading rows from a ContentProvider.
-- Sending and receiving Broadcast events.
-- Local state read/write.
-- Long-running task simulation.
-
-For template guidance, see [templates/provider-app/README.md](templates/provider-app/README.md). The suggested external template repository is:
+可信缓存接口：
 
 ```text
-https://github.com/Rorschach123/PandaGenieSDK-Provider-Template
+GET https://cf.pandagenie.ai/sdk/trust-cache?role=agent,provider
 ```
 
-If that repository is not created yet, copy the demo provider module into a new repository and keep only the provider app plus the minimal Gradle wrapper.
+## Demo 与模板
 
-## Build
+- 可运行 Demo：`examples/provider-demo`
+- 独立模板仓库：[PandaGenieSDK-Provider-Template](https://github.com/Rorschach123/PandaGenieSDK-Provider-Template)
 
-This repository can reuse the Gradle wrapper from the main app checkout:
+Demo 展示：
 
-```powershell
-cd E:\ProjectAI\PandaGenie\PandaGenieSDK
-..\PandaGenie\gradlew.bat -p . :pandagenie-sdk:assembleRelease :pandagenie-sdk-demo-provider:assembleRelease --no-daemon
-```
+- Service JSON 调用。
+- 打开 Activity 并传递文本。
+- 从 ContentProvider 读取数据。
+- BroadcastReceiver 接收调用。
+- Release 签名和注册信息示例。
 
-Useful outputs:
+## 文档
 
-```text
-pandagenie-sdk/build/outputs/aar/pandagenie-sdk-release.aar
-examples/provider-demo/build/outputs/apk/release/pandagenie-sdk-demo-provider-release.apk
-```
+- [架构说明](docs/ARCHITECTURE.md)
+- [接入指南](docs/INTEGRATION.md)
+- [注册与审核](docs/REGISTRATION.md)
+- [Demo 与模板](docs/DEMO_AND_TEMPLATE.md)
 
-## Release Signing
+## English
 
-Register and test with a release build, not a debug build. Get the SHA-256 certificate fingerprint with one of these commands:
-
-```bash
-# From APK
-apksigner verify --print-certs app-release.apk
-
-# From keystore
-keytool -list -v -keystore release.jks -alias your_alias
-```
-
-Expected format:
-
-```text
-2A:5F:...:9C
-```
-
-The registration form normalizes separators and letter case, but the final value must be a 64-character SHA-256 fingerprint.
-
-## More Documentation
-
-- [Architecture](docs/ARCHITECTURE.md)
-- [Integration Guide](docs/INTEGRATION.md)
-- [Registration and Review](docs/REGISTRATION.md)
-- [Demo and Template Guide](docs/DEMO_AND_TEMPLATE.md)
-
+English documentation is available in [README_EN.md](README_EN.md).

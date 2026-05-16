@@ -1,33 +1,38 @@
-# PandaGenieSDK Provider Template
+# PandaGenieSDK Provider 模板说明
 
-This folder documents the recommended standalone template project for SDK provider apps.
-
-The current runnable source lives in:
+这个目录记录推荐的独立 Provider 示例模板工程结构。当前可运行示例源码位于：
 
 ```text
 PandaGenieSDK/examples/provider-demo
 ```
 
-To create the GitHub template project:
+## 创建 GitHub Template 的推荐步骤
 
-1. Create a new repository, for example `PandaGenieSDK-Provider-Template`.
-2. Copy the demo provider module into that repository as `app/`.
-3. Keep only the minimal Gradle project files needed to build the app.
-4. Replace the demo package name, app name and capabilities.
-5. Depend on the published SDK artifact instead of local project modules.
-6. Add a README with registration steps and capability examples.
+1. 新建仓库，例如 `PandaGenieSDK-Provider-Template`。
+2. 将 `examples/provider-demo` 中的 Provider 示例整理为独立 `app/` 工程。
+3. 保留最小 Gradle 工程文件，删除本地构建缓存和私有签名材料。
+4. 替换 demo 包名、应用名称和能力清单。
+5. 使用发布后的 SDK AAR 依赖，不依赖本地 project module。
+6. 在 README 中说明注册步骤、签名获取方式和能力清单示例。
 
-Recommended dependency:
+推荐依赖：
 
 ```gradle
 implementation("ai.rorsch.pandagenie:pandagenie-sdk:0.1.0-preview")
 ```
 
-Do not commit:
+## 不要提交
 
-- Release keystores.
-- Signing passwords.
-- Local `signing.properties`.
-- Generated APK/AAB/AAR outputs.
+- release keystore
+- 签名密码
+- 本地 `signing.properties`
+- 生成的 APK、AAB、AAR
+- Gradle build/cache 目录
 
-Publish this repository as a GitHub Template so developers can click **Use this template** and start from a clean provider app.
+发布为 GitHub Template 后，开发者可以点击 **Use this template** 快速创建自己的 Provider 应用。
+
+## English
+
+This folder documents the recommended standalone template project for PandaGenieSDK provider apps.
+
+The runnable demo currently lives in `PandaGenieSDK/examples/provider-demo`. Copy it into a clean repository, replace the package name, app name, and capability manifest, then depend on the published SDK artifact.
