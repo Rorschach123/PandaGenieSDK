@@ -18,7 +18,7 @@ PandaGenieSDK/examples/provider-demo
 推荐依赖：
 
 ```gradle
-implementation("ai.rorsch.pandagenie:pandagenie-sdk:0.1.0-preview")
+implementation("ai.rorsch.pandagenie:pandagenie-sdk:1.0.36")
 ```
 
 ## 不要提交

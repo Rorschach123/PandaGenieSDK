@@ -39,7 +39,7 @@ PandaGenieSDK/
 The public dependency should be the unified AAR:
 
 ```gradle
-implementation("ai.rorsch.pandagenie:pandagenie-sdk:0.1.0-preview")
+implementation("ai.rorsch.pandagenie:pandagenie-sdk:1.0.36")
 ```
 
 The internal modules remain split only to keep implementation responsibilities clear.
@@ -71,9 +71,16 @@ The server validates apps by `packageName + release SHA-256 signature + role`. A
 
 ```gradle
 dependencies {
-    implementation("ai.rorsch.pandagenie:pandagenie-sdk:0.1.0-preview")
+    implementation("ai.rorsch.pandagenie:pandagenie-sdk:1.0.36")
 }
 ```
+
+Publishing notes:
+
+- Current SDK version: `1.0.36`.
+- The GitHub Release includes the unified AAR, layered AARs, and the provider demo APK.
+- JitPack can build the public dependency from tag `1.0.36`.
+- Maven Central requires Sonatype Central Portal credentials, GPG signing, and namespace verification. See [docs/PUBLISHING.md](docs/PUBLISHING.md).
 
 2. Initialize the SDK in your `Application`.
 
@@ -272,4 +279,3 @@ The registration form normalizes separators and letter case, but the final value
 - [Integration Guide](docs/INTEGRATION.md)
 - [Registration and Review](docs/REGISTRATION.md)
 - [Demo and Template Guide](docs/DEMO_AND_TEMPLATE.md)
-

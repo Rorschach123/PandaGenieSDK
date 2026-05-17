@@ -17,7 +17,10 @@
             android:value="@string/app_name" />
         <meta-data
             android:name="ai.rorsch.pandagenie.sdk.VERSION"
-            android:value="1.0.0" />
+            android:value="1.1.0" />
+        <meta-data
+            android:name="ai.rorsch.pandagenie.sdk.PROVIDER_AUTHORITY"
+            android:value="ai.rorsch.pandagenie.sdkdemo.provider.sdk" />
 
         <activity
             android:name=".MainActivity"
@@ -40,6 +43,11 @@
         <provider
             android:name=".DemoContentProvider"
             android:authorities="ai.rorsch.pandagenie.sdkdemo.provider.samples"
+            android:exported="true" />
+
+        <provider
+            android:name=".DemoSdkCapabilityProvider"
+            android:authorities="ai.rorsch.pandagenie.sdkdemo.provider.sdk"
             android:exported="true" />
 
         <receiver

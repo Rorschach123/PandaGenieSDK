@@ -4,8 +4,11 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -21,7 +24,11 @@ import ai.rorsch.pandagenie.sdk.core.SdkSignatureUtils;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class PandaGenieAgentClient {
     private final Context appContext;
@@ -44,13 +51,53 @@ public class PandaGenieAgentClient {
 
     public List<DiscoveredProvider> discoverProviders() {
         PackageManager pm = appContext.getPackageManager();
+        Map<String, DiscoveredProvider> providers = new LinkedHashMap<>();
+        Set<String> providerPackages = new LinkedHashSet<>();
+        try {
+            List<PackageInfo> packages = pm.getInstalledPackages(PackageManager.GET_META_DATA);
+            for (PackageInfo packageInfo : packages) {
+                if (packageInfo == null || packageInfo.applicationInfo == null) continue;
+                ApplicationInfo appInfo = packageInfo.applicationInfo;
+                if (appInfo.metaData == null) continue;
+                String packageName = appInfo.packageName;
+                if (appContext.getPackageName().equals(packageName)) continue;
+                String authority = appInfo.metaData.getString(SdkConstants.META_PROVIDER_AUTHORITY, "");
+                String role = appInfo.metaData.getString(SdkConstants.META_ROLE, "");
+                if (authority == null || authority.trim().isEmpty()) continue;
+                if (role != null && !role.trim().isEmpty()
+                        && !SdkConstants.ROLE_PROVIDER.equalsIgnoreCase(role.trim())) {
+                    continue;
+                }
+                String signature = "";
+                try {
+                    signature = SdkSignatureUtils.getSignatureSha256(appContext, packageName);
+                } catch (Exception ignored) {
+                }
+                if (requireTrustedProviders
+                        && !PandaGenieSdk.isTrustedApp(appContext, packageName, signature, SdkConstants.ROLE_PROVIDER)) {
+                    continue;
+                }
+                CharSequence label = appInfo.loadLabel(pm);
+                providers.put(packageName + "@" + authority, new DiscoveredProvider(
+                        label == null ? packageName : label.toString(),
+                        packageName,
+                        "",
+                        signature,
+                        null,
+                        authority.trim()
+                ));
+                providerPackages.add(packageName);
+            }
+        } catch (Exception ignored) {
+        }
+
         Intent intent = new Intent(SdkConstants.ACTION_CAPABILITY_SERVICE);
         List<ResolveInfo> services = pm.queryIntentServices(intent, PackageManager.GET_META_DATA);
-        List<DiscoveredProvider> providers = new ArrayList<>();
         for (ResolveInfo info : services) {
             if (info.serviceInfo == null || !info.serviceInfo.exported) continue;
             String packageName = info.serviceInfo.packageName;
             if (appContext.getPackageName().equals(packageName)) continue;
+            if (providerPackages.contains(packageName)) continue;
             String serviceName = info.serviceInfo.name;
             String signature = "";
             try {
@@ -63,7 +110,7 @@ public class PandaGenieAgentClient {
             }
             CharSequence label = info.serviceInfo.loadLabel(pm);
             if (label == null) label = info.loadLabel(pm);
-            providers.add(new DiscoveredProvider(
+            providers.put(packageName + "/" + serviceName, new DiscoveredProvider(
                     label == null ? packageName : label.toString(),
                     packageName,
                     serviceName,
@@ -71,7 +118,7 @@ public class PandaGenieAgentClient {
                     new ComponentName(packageName, serviceName)
             ));
         }
-        return providers;
+        return new ArrayList<>(providers.values());
     }
 
     public void fetchManifest(DiscoveredProvider provider, ManifestCallback callback) {
@@ -119,6 +166,50 @@ public class PandaGenieAgentClient {
     }
 
     private void send(DiscoveredProvider provider, int what, Bundle data, ResultCallback callback) {
+        if (provider.providerAuthority != null && !provider.providerAuthority.trim().isEmpty()) {
+            sendViaProvider(provider, what, data, callback);
+            return;
+        }
+        sendViaService(provider, what, data, callback);
+    }
+
+    private void sendViaProvider(DiscoveredProvider provider, int what, Bundle data, ResultCallback callback) {
+        new Thread(() -> {
+            try {
+                String method = what == SdkConstants.MSG_GET_MANIFEST
+                        ? SdkConstants.METHOD_GET_MANIFEST
+                        : SdkConstants.METHOD_INVOKE;
+                Bundle response = appContext.getContentResolver().call(
+                        Uri.parse("content://" + provider.providerAuthority),
+                        method,
+                        null,
+                        data == null ? new Bundle() : data
+                );
+                mainHandler.post(() -> {
+                    if (response == null) {
+                        callback.onError("SDK provider returned empty response");
+                        return;
+                    }
+                    String error = response.getString(SdkConstants.KEY_ERROR, "");
+                    if (error != null && !error.trim().isEmpty()) {
+                        callback.onError(error);
+                    } else {
+                        callback.onSuccess(response);
+                    }
+                });
+            } catch (Exception e) {
+                mainHandler.post(() -> callback.onError(
+                        e.getMessage() == null ? "SDK provider call failed" : e.getMessage()
+                ));
+            }
+        }, "PandaGenieSdkProviderCall").start();
+    }
+
+    private void sendViaService(DiscoveredProvider provider, int what, Bundle data, ResultCallback callback) {
+        if (provider.componentName == null) {
+            callback.onError("SDK provider has no service endpoint");
+            return;
+        }
         Intent intent = new Intent(SdkConstants.ACTION_CAPABILITY_SERVICE);
         intent.setComponent(provider.componentName);
         final boolean[] completed = {false};

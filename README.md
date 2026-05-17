@@ -50,7 +50,7 @@ PandaGenieSDK/
 
 ```gradle
 dependencies {
-    implementation("ai.rorsch.pandagenie:pandagenie-sdk:0.1.0-preview")
+    implementation("ai.rorsch.pandagenie:pandagenie-sdk:1.0.36")
 }
 ```
 
@@ -71,6 +71,13 @@ public final class MyApp extends Application {
 3. 校验调用方是否是已审核 AI 助手。
 4. 返回结构化 JSON 结果。
 5. 到 [SDK 注册页](https://cf.pandagenie.ai/sdk) 提交包名、Release SHA-256 签名、应用说明和能力列表。
+
+## 发布与公共库
+
+- 当前 SDK 版本：`1.0.36`
+- GitHub Release 会附带统一 AAR、分层 AAR 和 demo APK。
+- JitPack 可直接通过 Git tag `1.0.36` 构建公共依赖。
+- Maven Central 需要 Sonatype Central Portal、GPG 签名和 namespace 审核；教程见 [docs/PUBLISHING.md](docs/PUBLISHING.md)。
 
 ## 快速接入：AI 助手
 

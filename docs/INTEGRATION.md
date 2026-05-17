@@ -8,7 +8,7 @@ Published dependency:
 
 ```gradle
 dependencies {
-    implementation("ai.rorsch.pandagenie:pandagenie-sdk:0.1.0-preview")
+    implementation("ai.rorsch.pandagenie:pandagenie-sdk:1.0.36")
 }
 ```
 
