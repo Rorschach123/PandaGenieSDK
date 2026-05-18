@@ -2,7 +2,9 @@
 
 Current SDK version: `1.0.36`
 
-This release is published as GitHub source, GitHub Release assets, and a JitPack-ready tag. It has not been published to Maven Central unless the maintainer runs the Central Portal steps below with a Sonatype account, signing key, and portal token.
+This release is published as GitHub source, GitHub Release assets, GitHub Packages Maven artifacts, and a JitPack-ready tag. It has not been published to Maven Central unless the maintainer runs the Central Portal steps below with a Sonatype account, signing key, and portal token.
+
+SDK versions are managed independently from the PandaGenie app version. `1.0.36` matches the app release only because this SDK package was cut for that app integration release. Future SDK releases can use their own sequence, such as `1.0.37`, `1.1.0`, or any semver-compatible version.
 
 ## What Is Already Ready
 
@@ -13,6 +15,11 @@ This release is published as GitHub source, GitHub Release assets, and a JitPack
   - `ai.rorsch.pandagenie:pandagenie-sdk-provider:1.0.36`
 - GitHub repository: `https://github.com/Rorschach123/PandaGenieSDK`
 - Recommended release tag: `1.0.36`
+- GitHub Packages:
+  - `https://github.com/users/Rorschach123/packages/maven/package/ai.rorsch.pandagenie.pandagenie-sdk`
+  - `https://github.com/users/Rorschach123/packages/maven/package/ai.rorsch.pandagenie.pandagenie-sdk-core`
+  - `https://github.com/users/Rorschach123/packages/maven/package/ai.rorsch.pandagenie.pandagenie-sdk-agent`
+  - `https://github.com/users/Rorschach123/packages/maven/package/ai.rorsch.pandagenie.pandagenie-sdk-provider`
 - Demo APK: `examples/provider-demo/build/outputs/apk/release/pandagenie-sdk-demo-provider-release.apk`
 
 ## Option 1: Use JitPack
@@ -88,6 +95,39 @@ $env:GITHUB_TOKEN="<token with write:packages>"
 .\gradlew.bat publishAllPublicationsToGitHubPackagesRepository --no-daemon
 ```
 
+Consumer setup:
+
+```gradle
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/Rorschach123/PandaGenieSDK")
+            credentials {
+                username = findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                password = findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}
+```
+
+Consumer dependencies:
+
+```gradle
+// AI assistant / caller app
+implementation("ai.rorsch.pandagenie:pandagenie-sdk-agent:1.0.36")
+
+// Capability provider app
+implementation("ai.rorsch.pandagenie:pandagenie-sdk-provider:1.0.36")
+
+// Full aggregate dependency
+implementation("ai.rorsch.pandagenie:pandagenie-sdk:1.0.36")
+```
+
 ## Option 3: Publish To Maven Central
 
 Maven Central requires more setup than GitHub or JitPack:
@@ -122,4 +162,3 @@ Local Maven output appears under:
 ```text
 %USERPROFILE%\.m2\repository\ai\rorsch\pandagenie\
 ```
-

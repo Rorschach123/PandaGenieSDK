@@ -9,6 +9,8 @@ if (signingPropsFile.exists()) {
     signingPropsFile.withInputStream { signingProps.load(it) }
 }
 def hasDemoSigning = signingProps['storeFile'] && signingProps['storePassword'] && signingProps['keyAlias'] && signingProps['keyPassword']
+def pandaGenieSdkGroup = rootProject.findProperty('PANDAGENIE_SDK_GROUP') ?: 'ai.rorsch.pandagenie'
+def pandaGenieSdkVersion = rootProject.findProperty('PANDAGENIE_SDK_VERSION') ?: '1.0.36'
 
 android {
     namespace 'ai.rorsch.pandagenie.sdkdemo.provider'
@@ -47,5 +49,5 @@ android {
 }
 
 dependencies {
-    implementation project(':pandagenie-sdk')
+    implementation "${pandaGenieSdkGroup}:pandagenie-sdk-provider:${pandaGenieSdkVersion}"
 }
